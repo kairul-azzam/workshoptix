@@ -14,3 +14,7 @@ Route::get('/workshops/{id}/daftar', function ($id) {
 Route::get('/pendaftaran/{id}/status', function ($id) {
     return view('registrations.status', ['id' => $id]);
 });
+
+Route::get('/pendaftaran/{id}/tiket', function ($id) {
+    return view('registrations.ticket', ['id' => $id]);
+});
