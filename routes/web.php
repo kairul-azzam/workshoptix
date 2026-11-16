@@ -18,3 +18,5 @@ Route::get('/pendaftaran/{id}/status', function ($id) {
 Route::get('/pendaftaran/{id}/tiket', function ($id) {
     return view('registrations.ticket', ['id' => $id]);
 });
+
+Route::view('/panitia', 'panitia.dashboard');
