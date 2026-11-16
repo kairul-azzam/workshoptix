@@ -10,3 +10,7 @@ Route::get('/workshops/{id}', function ($id) {
 Route::get('/workshops/{id}/daftar', function ($id) {
     return view('registrations.create', ['id' => $id]);
 });
+
+Route::get('/pendaftaran/{id}/status', function ($id) {
+    return view('registrations.status', ['id' => $id]);
+});
