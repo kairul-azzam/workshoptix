@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Panitia\WorkshopController as PanitiaWorkshopController;
+use App\Http\Controllers\Panitia\PendaftarController;
 
 // ---------- Terbuka untuk semua ----------
 Route::view('/', 'beranda');
@@ -50,4 +51,5 @@ Route::middleware(['auth', 'role:panitia'])
         Route::get('/workshops/{workshop}/edit', [PanitiaWorkshopController::class, 'edit'])->name('workshops.edit');
         Route::put('/workshops/{workshop}', [PanitiaWorkshopController::class, 'update'])->name('workshops.update');
         Route::delete('/workshops/{workshop}', [PanitiaWorkshopController::class, 'destroy'])->name('workshops.destroy');
+        Route::get('/pendaftar', [PendaftarController::class, 'index'])->name('pendaftar.index');
     });
