@@ -190,7 +190,9 @@
             }
         }
 
-        .nav-links form { display: inline; }
+        .nav-links form {
+            display: inline;
+        }
     </style>
 
     {{-- CSS khusus halaman diletakkan di sini --}}
@@ -216,6 +218,9 @@
                 @if (auth()->user()->isPanitia())
                 <a href="/panitia">Dashboard</a>
                 @endif
+                @unless (auth()->user()->isPanitia())
+                <a href="{{ route('registrations.index') }}">Pendaftaran saya</a>
+                @endunless
                 <span>Halo, {{ auth()->user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

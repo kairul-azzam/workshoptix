@@ -8,11 +8,25 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class RegistrationController extends Controller
 {
-    // Tampilkan form pendaftaran
+    // ---------- Daftar pendaftaran milik user yang login ----------
+    public function index(Request $request)
+    {
+        // with('workshop') = eager loading, supaya tidak N+1
+        $pendaftaran = $request->user()
+            ->registrations()
+            ->with('workshop')
+            ->orderByDesc('id')
+            ->get();
+
+        return view('registrations.index', compact('pendaftaran'));
+    }
+
+    // ---------- Form pendaftaran ----------
     public function create($id)
     {
         $workshop = Workshop::withTerisi()->findOrFail($id);
@@ -34,7 +48,7 @@ class RegistrationController extends Controller
         return view('registrations.create', compact('workshop'));
     }
 
-    // Simpan pendaftaran
+    // ---------- Simpan pendaftaran ----------
     public function store(Request $request, $id): RedirectResponse
     {
         // Hanya kelas dan WhatsApp yang diambil dari form.
@@ -96,5 +110,29 @@ class RegistrationController extends Controller
 
         return redirect()->route('registrations.status', $registrasi->id)
             ->with('sukses', 'Pendaftaran berhasil. Silakan lanjut ke pembayaran.');
+    }
+
+    // ---------- Status pembayaran ----------
+    public function status($id)
+    {
+        $registrasi = Registration::with(['workshop', 'user'])->findOrFail($id);
+
+        // Policy: hanya pemilik. Selain itu otomatis 403.
+        Gate::authorize('view', $registrasi);
+
+        return view('registrations.status', compact('registrasi'));
+    }
+
+    // ---------- Tiket digital ----------
+    public function ticket($id)
+    {
+        $registrasi = Registration::with(['workshop', 'user'])->findOrFail($id);
+
+        // Lapisan 1: hanya pemilik
+        Gate::authorize('view', $registrasi);
+
+        // Lapisan 2: data tiket hanya dikirim ke tampilan jika sudah lunas
+        // (pengecekan ada di view lewat $registrasi->isLunas())
+        return view('registrations.ticket', compact('registrasi'));
     }
 }

@@ -28,13 +28,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/workshops/{id}/daftar', [RegistrationController::class, 'store'])->name('registrations.store');
 
     // Masih dummy, diganti di Langkah 04
-    Route::get('/pendaftaran/{id}/status', function ($id) {
-        return view('registrations.status', ['id' => $id]);
-    })->name('registrations.status');
-
-    Route::get('/pendaftaran/{id}/tiket', function ($id) {
-        return view('registrations.ticket', ['id' => $id]);
-    })->name('registrations.ticket');
+    Route::get('/pendaftaran', [RegistrationController::class, 'index'])->name('registrations.index');
+    Route::get('/pendaftaran/{id}/status', [RegistrationController::class, 'status'])->name('registrations.status');
+    Route::get('/pendaftaran/{id}/tiket', [RegistrationController::class, 'ticket'])->name('registrations.ticket');
 });
 
 // ---------- Hanya panitia ----------
