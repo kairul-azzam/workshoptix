@@ -1,54 +1,11 @@
 {{--
     File: resources/views/workshops/show.blade.php
-    Halaman detail workshop (WT-07). Data masih dummy.
-
-    Route di routes/web.php:
-        Route::get('/workshops/{id}', function ($id) {
-            return view('workshops.show', ['id' => $id]);
-        });
+    Detail workshop dari database.
+    Variabel: $workshop (dengan sisa kursi), $registrasi (pendaftaran milik user yang login, atau null)
 --}}
 @extends('layouts.app')
 
-@php
-    $semua = [
-        1 => [
-            'judul' => 'Dasar Laravel untuk Pemula', 'pemateri' => 'Kak Dimas',
-            'tanggal' => '22 Nov 2026', 'jam' => '09.00 WIB', 'lokasi' => 'Lab RPL 1',
-            'harga' => 25000, 'kuota' => 30, 'sisa' => 12,
-            'deskripsi' => 'Kenalan dengan Laravel dari nol. Kamu akan membuat proyek pertama, memahami route, controller, dan view Blade, lalu menampilkan data sederhana di halaman web.',
-            'materi' => ['Instalasi dan struktur folder Laravel', 'Route, controller, dan view Blade', 'Koneksi database dan migration', 'Menampilkan data dengan Eloquent'],
-            'bawa' => ['Laptop dengan PHP, Composer, dan MySQL terpasang', 'Editor kode (VS Code)'],
-        ],
-        2 => [
-            'judul' => 'Desain UI dengan Figma', 'pemateri' => 'Kak Salsa',
-            'tanggal' => '23 Nov 2026', 'jam' => '13.00 WIB', 'lokasi' => 'Lab Multimedia',
-            'harga' => 20000, 'kuota' => 25, 'sisa' => 5,
-            'deskripsi' => 'Belajar membuat rancangan tampilan aplikasi di Figma, mulai dari warna, huruf, sampai prototipe yang bisa diklik.',
-            'materi' => ['Dasar frame dan layout', 'Warna dan tipografi', 'Komponen yang bisa dipakai ulang', 'Prototipe interaktif'],
-            'bawa' => ['Laptop dan akun Figma gratis'],
-        ],
-        3 => [
-            'judul' => 'Git dan GitHub untuk Tim', 'pemateri' => 'Pak Rangga',
-            'tanggal' => '29 Nov 2026', 'jam' => '09.00 WIB', 'lokasi' => 'Lab RPL 2',
-            'harga' => 15000, 'kuota' => 30, 'sisa' => 20,
-            'deskripsi' => 'Latihan alur kerja tim dengan Git: branch, commit, pull request, dan cara menyelesaikan konflik.',
-            'materi' => ['Commit dan branch', 'Push dan pull dari GitHub', 'Pull request dan review', 'Menyelesaikan konflik merge'],
-            'bawa' => ['Laptop dengan Git terpasang', 'Akun GitHub'],
-        ],
-        4 => [
-            'judul' => 'Pengenalan API dan Postman', 'pemateri' => 'Kak Nabila',
-            'tanggal' => '30 Nov 2026', 'jam' => '10.00 WIB', 'lokasi' => 'Aula Sekolah',
-            'harga' => 30000, 'kuota' => 40, 'sisa' => 0,
-            'deskripsi' => 'Memahami cara aplikasi saling bertukar data lewat API, lalu mencobanya langsung dengan Postman.',
-            'materi' => ['Apa itu API dan JSON', 'Method GET, POST, PUT, DELETE', 'Mencoba endpoint di Postman', 'Membaca kode status HTTP'],
-            'bawa' => ['Laptop dengan Postman terpasang'],
-        ],
-    ];
-
-    $w = $semua[$id] ?? abort(404);
-@endphp
-
-@section('title', $w['judul'])
+@section('title', $workshop->judul)
 
 @push('styles')
 <style>
@@ -101,53 +58,43 @@
     <div class="wrap">
         <a href="/#workshop" class="back">&larr; Kembali ke daftar workshop</a>
 
+        @include('partials.flash')
+
         <div class="detail-grid">
             {{-- Kolom kiri: informasi --}}
             <div>
-                <h1>{{ $w['judul'] }}</h1>
-                <p class="pemateri">Pemateri: {{ $w['pemateri'] }}</p>
+                <h1>{{ $workshop->judul }}</h1>
+                <p class="pemateri">Pemateri: {{ $workshop->pemateri }}</p>
 
                 <div class="info-box">
-                    <div><small>Tanggal</small><strong>{{ $w['tanggal'] }}</strong></div>
-                    <div><small>Jam</small><strong>{{ $w['jam'] }}</strong></div>
-                    <div><small>Tempat</small><strong>{{ $w['lokasi'] }}</strong></div>
+                    <div><small>Tanggal</small><strong>{{ $workshop->tanggal_tampil }}</strong></div>
+                    <div><small>Jam</small><strong>{{ $workshop->jam_tampil }}</strong></div>
+                    <div><small>Tempat</small><strong>{{ $workshop->lokasi }}</strong></div>
                 </div>
 
                 <h2>Tentang workshop ini</h2>
-                <p class="isi">{{ $w['deskripsi'] }}</p>
-
-                <h2>Materi yang dipelajari</h2>
-                <ul>
-                    @foreach ($w['materi'] as $m)
-                        <li>{{ $m }}</li>
-                    @endforeach
-                </ul>
-
-                <h2>Yang perlu dibawa</h2>
-                <ul>
-                    @foreach ($w['bawa'] as $b)
-                        <li>{{ $b }}</li>
-                    @endforeach
-                </ul>
+                <p class="isi">{!! nl2br(e($workshop->deskripsi)) !!}</p>
             </div>
 
             {{-- Kolom kanan: kartu pendaftaran --}}
             <aside class="daftar-card">
-                <div class="harga">Rp {{ number_format($w['harga'], 0, ',', '.') }}</div>
+                <div class="harga">Rp {{ number_format($workshop->harga, 0, ',', '.') }}</div>
 
                 <div class="kuota">
-                    @if ($w['sisa'] === 0)
+                    @if ($workshop->sisa === 0)
                         <span class="sisa habis">Kursi habis</span>
                     @else
-                        <span class="sisa {{ $w['sisa'] <= 5 ? 'sedikit' : '' }}">Tersisa {{ $w['sisa'] }} kursi</span>
-                        dari {{ $w['kuota'] }}
+                        <span class="sisa {{ $workshop->sisa <= 5 ? 'sedikit' : '' }}">Tersisa {{ $workshop->sisa }} kursi</span>
+                        dari {{ $workshop->kuota }}
                     @endif
                 </div>
 
-                @if ($w['sisa'] === 0)
+                @if ($registrasi)
+                    <a href="{{ route('registrations.status', $registrasi->id) }}" class="btn btn-outline">Kamu sudah terdaftar, lihat status</a>
+                @elseif ($workshop->sisa === 0)
                     <a class="btn" aria-disabled="true">Pendaftaran penuh</a>
                 @else
-                    <a href="/workshops/{{ $id }}/daftar" class="btn btn-orange">Daftar workshop ini</a>
+                    <a href="{{ route('registrations.create', $workshop->id) }}" class="btn btn-orange">Daftar workshop ini</a>
                 @endif
 
                 <p class="catatan">

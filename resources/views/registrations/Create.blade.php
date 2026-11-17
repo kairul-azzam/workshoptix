@@ -1,33 +1,10 @@
 {{--
     File: resources/views/registrations/create.blade.php
-    Halaman form pendaftaran workshop (WT-08). Data masih dummy.
-
-    Route di routes/web.php:
-        Route::get('/workshops/{id}/daftar', function ($id) {
-            return view('registrations.create', ['id' => $id]);
-        });
-
-    Catatan: form ini sementara memakai method GET menuju halaman status,
-    hanya untuk menguji navigasi. Di langkah 03, ganti menjadi method POST
-    ke controller (sudah ada @csrf dan @error, jadi tinggal diaktifkan).
+    Form pendaftaran. Variabel: $workshop. Nama dan email dari akun yang login.
 --}}
 @extends('layouts.app')
 
-@php
-    $semua = [
-        1 => ['judul' => 'Dasar Laravel untuk Pemula', 'tanggal' => '22 Nov 2026', 'jam' => '09.00 WIB', 'lokasi' => 'Lab RPL 1',       'harga' => 25000],
-        2 => ['judul' => 'Desain UI dengan Figma',     'tanggal' => '23 Nov 2026', 'jam' => '13.00 WIB', 'lokasi' => 'Lab Multimedia', 'harga' => 20000],
-        3 => ['judul' => 'Git dan GitHub untuk Tim',   'tanggal' => '29 Nov 2026', 'jam' => '09.00 WIB', 'lokasi' => 'Lab RPL 2',       'harga' => 15000],
-        4 => ['judul' => 'Pengenalan API dan Postman', 'tanggal' => '30 Nov 2026', 'jam' => '10.00 WIB', 'lokasi' => 'Aula Sekolah',   'harga' => 30000],
-    ];
-
-    $w = $semua[$id] ?? abort(404);
-
-    // Data peserta dummy (nanti diganti auth()->user())
-    $peserta = ['nama' => 'Nama Peserta', 'email' => 'peserta@contoh.com'];
-@endphp
-
-@section('title', 'Daftar ' . $w['judul'])
+@section('title', 'Daftar ' . $workshop->judul)
 
 @push('styles')
 <style>
@@ -77,7 +54,7 @@
 @section('content')
 <section class="daftar">
     <div class="wrap">
-        <a href="/workshops/{{ $id }}" class="back">&larr; Kembali ke detail workshop</a>
+        <a href="{{ route('workshops.show', $workshop->id) }}" class="back">&larr; Kembali ke detail workshop</a>
 
         <h1>Daftar workshop</h1>
         <p class="sub">Isi data di bawah, lalu lanjut ke pembayaran.</p>
@@ -85,20 +62,18 @@
         <div class="daftar-grid">
             {{-- Form --}}
             <div class="form-card">
-                {{-- Sementara GET ke halaman status. Nanti: method="POST" action="/workshops/{{ $id }}/daftar" --}}
-                <form method="GET" action="/pendaftaran/1/status">
+                <form method="POST" action="{{ route('registrations.store', $workshop->id) }}">
                     @csrf
 
                     <div class="field">
                         <label for="nama">Nama lengkap</label>
-                        <input type="text" id="nama" name="nama" value="{{ old('nama', $peserta['nama']) }}" required>
-                        @error('nama') <p class="error">{{ $message }}</p> @enderror
+                        <input type="text" id="nama" value="{{ auth()->user()->name }}" readonly>
+                        <p class="hint">Nama dan email diambil dari akunmu.</p>
                     </div>
 
                     <div class="field">
                         <label for="email">Email</label>
-                        <input type="email" id="email" name="email" value="{{ $peserta['email'] }}" readonly>
-                        <p class="hint">Email diambil dari akunmu dan tidak bisa diubah di sini.</p>
+                        <input type="email" id="email" value="{{ auth()->user()->email }}" readonly>
                     </div>
 
                     <div class="field @error('kelas') has-error @enderror">
@@ -119,10 +94,13 @@
                         @error('whatsapp') <p class="error">{{ $message }}</p> @enderror
                     </div>
 
-                    <label class="cek">
-                        <input type="checkbox" name="setuju" required>
-                        <span>Data yang saya isi sudah benar dan saya setuju mengikuti aturan workshop.</span>
-                    </label>
+                    <div>
+                        <label class="cek">
+                            <input type="checkbox" name="setuju" value="1" required @checked(old('setuju'))>
+                            <span>Data yang saya isi sudah benar dan saya setuju mengikuti aturan workshop.</span>
+                        </label>
+                        @error('setuju') <p style="font-size:.9rem;color:#a3262f;margin:-.8rem 0 1rem">{{ $message }}</p> @enderror
+                    </div>
 
                     <button type="submit" class="btn btn-orange">Daftar dan lanjut bayar</button>
                 </form>
@@ -132,13 +110,13 @@
             <aside class="ringkasan">
                 <h2>Ringkasan pendaftaran</h2>
                 <dl>
-                    <div><dt>Workshop</dt><dd>{{ $w['judul'] }}</dd></div>
-                    <div><dt>Jadwal</dt><dd>{{ $w['tanggal'] }}, {{ $w['jam'] }}</dd></div>
-                    <div><dt>Tempat</dt><dd>{{ $w['lokasi'] }}</dd></div>
+                    <div><dt>Workshop</dt><dd>{{ $workshop->judul }}</dd></div>
+                    <div><dt>Jadwal</dt><dd>{{ $workshop->tanggal_tampil }}, {{ $workshop->jam_tampil }}</dd></div>
+                    <div><dt>Tempat</dt><dd>{{ $workshop->lokasi }}</dd></div>
                 </dl>
                 <div class="total">
                     <span>Total bayar</span>
-                    <strong>Rp {{ number_format($w['harga'], 0, ',', '.') }}</strong>
+                    <strong>Rp {{ number_format($workshop->harga, 0, ',', '.') }}</strong>
                 </div>
                 <p class="catatan">Nominal ditentukan oleh server dan tidak bisa diubah dari form.</p>
             </aside>

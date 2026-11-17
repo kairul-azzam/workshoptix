@@ -4,13 +4,12 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Panitia\WorkshopController as PanitiaWorkshopController;
 use App\Http\Controllers\Panitia\PendaftarController;
+use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\WorkshopController;
 
 // ---------- Terbuka untuk semua ----------
-Route::view('/', 'beranda');
-
-Route::get('/workshops/{id}', function ($id) {
-    return view('workshops.show', ['id' => $id]);
-});
+Route::get('/', [WorkshopController::class, 'index'])->name('home');
+Route::get('/workshops/{id}', [WorkshopController::class, 'show'])->name('workshops.show');
 
 // ---------- Hanya yang belum login ----------
 Route::middleware('guest')->group(function () {
@@ -25,17 +24,17 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/workshops/{id}/daftar', function ($id) {
-        return view('registrations.create', ['id' => $id]);
-    });
+    Route::get('/workshops/{id}/daftar', [RegistrationController::class, 'create'])->name('registrations.create');
+    Route::post('/workshops/{id}/daftar', [RegistrationController::class, 'store'])->name('registrations.store');
 
+    // Masih dummy, diganti di Langkah 04
     Route::get('/pendaftaran/{id}/status', function ($id) {
         return view('registrations.status', ['id' => $id]);
-    });
+    })->name('registrations.status');
 
     Route::get('/pendaftaran/{id}/tiket', function ($id) {
         return view('registrations.ticket', ['id' => $id]);
-    });
+    })->name('registrations.ticket');
 });
 
 // ---------- Hanya panitia ----------
