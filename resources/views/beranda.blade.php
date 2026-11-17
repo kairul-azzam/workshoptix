@@ -128,7 +128,7 @@
                 </p>
                 <div class="hero-actions">
                     <a href="#workshop" class="btn btn-orange">Lihat workshop</a>
-                    <a href="#" class="btn btn-outline">Masuk ke akun</a>
+                    <a href="{{ route('login') }}" class="btn btn-outline">Masuk ke akun</a>
                 </div>
             </div>
 
