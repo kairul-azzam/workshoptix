@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use App\Services\MidtransService;
 
 class RegistrationController extends Controller
 {
@@ -113,14 +114,29 @@ class RegistrationController extends Controller
     }
 
     // ---------- Status pembayaran ----------
-    public function status($id)
+    public function status($id, MidtransService $midtrans)
     {
         $registrasi = Registration::with(['workshop', 'user'])->findOrFail($id);
 
-        // Policy: hanya pemilik. Selain itu otomatis 403.
         Gate::authorize('view', $registrasi);
 
-        return view('registrations.status', compact('registrasi'));
+        // Workshop gratis (harga 0): langsung lunas, tidak lewat Midtrans
+        if ($registrasi->status_bayar === 'pending' && (int) $registrasi->workshop->harga === 0) {
+            $midtrans->bayarGratis($registrasi);
+        }
+
+        $snapToken = null;
+
+        if ($registrasi->status_bayar === 'pending') {
+            try {
+                $snapToken = $midtrans->tokenFor($registrasi);
+            } catch (\Throwable $e) {
+                report($e);
+                session()->now('galat', 'Pembayaran belum bisa diproses saat ini. Hubungi panitia.');
+            }
+        }
+
+        return view('registrations.status', compact('registrasi', 'snapToken'));
     }
 
     // ---------- Tiket digital ----------

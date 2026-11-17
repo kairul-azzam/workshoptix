@@ -1,7 +1,10 @@
 {{-- File: resources/views/partials/flash.blade.php
-     Pesan singkat setelah suatu aksi (sukses atau galat). --}}
+     Pesan singkat setelah suatu aksi: sukses (hijau), info (oranye), galat (merah). --}}
 @if (session('sukses'))
     <div style="background:var(--mint);color:#17613a;border-radius:10px;padding:.8rem 1.1rem;margin-bottom:1.2rem">{{ session('sukses') }}</div>
+@endif
+@if (session('info'))
+    <div style="background:#fff3e2;color:var(--orange-dark);border-radius:10px;padding:.8rem 1.1rem;margin-bottom:1.2rem">{{ session('info') }}</div>
 @endif
 @if (session('galat'))
     <div style="background:#fde8ea;color:#a3262f;border-radius:10px;padding:.8rem 1.1rem;margin-bottom:1.2rem">{{ session('galat') }}</div>

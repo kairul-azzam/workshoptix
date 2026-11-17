@@ -6,6 +6,7 @@ use App\Http\Controllers\Panitia\WorkshopController as PanitiaWorkshopController
 use App\Http\Controllers\Panitia\PendaftarController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\WorkshopController;
+use App\Http\Controllers\PaymentController;
 
 // ---------- Terbuka untuk semua ----------
 Route::get('/', [WorkshopController::class, 'index'])->name('home');
@@ -31,6 +32,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/pendaftaran', [RegistrationController::class, 'index'])->name('registrations.index');
     Route::get('/pendaftaran/{id}/status', [RegistrationController::class, 'status'])->name('registrations.status');
     Route::get('/pendaftaran/{id}/tiket', [RegistrationController::class, 'ticket'])->name('registrations.ticket');
+    Route::post('/pendaftaran/{id}/cek-status', [PaymentController::class, 'cekStatus'])->name('payments.check');
+    Route::post('/pendaftaran/{id}/bayar-ulang', [PaymentController::class, 'bayarUlang'])->name('payments.retry');
 });
 
 // ---------- Hanya panitia ----------
