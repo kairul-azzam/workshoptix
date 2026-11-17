@@ -1,20 +1,10 @@
 {{--
     File: resources/views/beranda.blade.php
-    Halaman beranda. Kerangka (navbar, footer, CSS umum) ada di layouts/app.blade.php.
-    Data masih dummy, nanti diganti data dari database.
+    Beranda. Data workshop dari database (variabel $workshops dari WorkshopController@index).
 --}}
 @extends('layouts.app')
 
 @section('title', 'Beranda')
-
-@php
-    $workshops = [
-        ['id' => 1, 'judul' => 'Dasar Laravel untuk Pemula',  'pemateri' => 'Kak Dimas',  'tanggal' => '22 Nov 2026', 'jam' => '09.00 WIB', 'lokasi' => 'Lab RPL 1',   'harga' => 25000, 'sisa' => 12],
-        ['id' => 2, 'judul' => 'Desain UI dengan Figma',      'pemateri' => 'Kak Salsa',  'tanggal' => '23 Nov 2026', 'jam' => '13.00 WIB', 'lokasi' => 'Lab Multimedia', 'harga' => 20000, 'sisa' => 5],
-        ['id' => 3, 'judul' => 'Git dan GitHub untuk Tim',    'pemateri' => 'Pak Rangga', 'tanggal' => '29 Nov 2026', 'jam' => '09.00 WIB', 'lokasi' => 'Lab RPL 2',   'harga' => 15000, 'sisa' => 20],
-        ['id' => 4, 'judul' => 'Pengenalan API dan Postman',  'pemateri' => 'Kak Nabila', 'tanggal' => '30 Nov 2026', 'jam' => '10.00 WIB', 'lokasi' => 'Aula Sekolah', 'harga' => 30000, 'sisa' => 0],
-    ];
-@endphp
 
 {{-- CSS khusus beranda --}}
 @push('styles')
@@ -117,6 +107,12 @@
 
 @section('content')
 
+    @if (session('sukses') || session('galat'))
+        <div class="wrap" style="padding-top:1.2rem">
+            @include('partials.flash')
+        </div>
+    @endif
+
     {{-- ===== Hero ===== --}}
     <section class="hero">
         <div class="wrap">
@@ -128,7 +124,7 @@
                 </p>
                 <div class="hero-actions">
                     <a href="#workshop" class="btn btn-orange">Lihat workshop</a>
-                    <a href="#" class="btn btn-outline">Masuk ke akun</a>
+                    @guest<a href="{{ route('login') }}" class="btn btn-outline">Masuk ke akun</a>@endguest
                 </div>
             </div>
 
@@ -154,33 +150,35 @@
             </div>
 
             <div class="list">
-                @foreach ($workshops as $w)
+                @forelse ($workshops as $w)
                     <article class="ticket">
                         <div class="info">
-                            <h3>{{ $w['judul'] }}</h3>
-                            <p class="pemateri">Pemateri: {{ $w['pemateri'] }}</p>
+                            <h3>{{ $w->judul }}</h3>
+                            <p class="pemateri">Pemateri: {{ $w->pemateri }}</p>
                             <dl class="meta">
-                                <div><dt>Tanggal:</dt> <dd>{{ $w['tanggal'] }}</dd></div>
-                                <div><dt>Jam:</dt> <dd>{{ $w['jam'] }}</dd></div>
-                                <div><dt>Tempat:</dt> <dd>{{ $w['lokasi'] }}</dd></div>
+                                <div><dt>Tanggal:</dt> <dd>{{ $w->tanggal_tampil }}</dd></div>
+                                <div><dt>Jam:</dt> <dd>{{ $w->jam_tampil }}</dd></div>
+                                <div><dt>Tempat:</dt> <dd>{{ $w->lokasi }}</dd></div>
                             </dl>
                         </div>
 
                         <div class="side">
-                            <div class="harga">Rp {{ number_format($w['harga'], 0, ',', '.') }}</div>
+                            <div class="harga">Rp {{ number_format($w->harga, 0, ',', '.') }}</div>
 
-                            @if ($w['sisa'] === 0)
+                            @if ($w->sisa === 0)
                                 <div class="sisa habis">Kursi habis</div>
                                 <a class="btn" aria-disabled="true">Penuh</a>
                             @else
-                                <div class="sisa {{ $w['sisa'] <= 5 ? 'sedikit' : '' }}">
-                                    Tersisa {{ $w['sisa'] }} kursi
+                                <div class="sisa {{ $w->sisa <= 5 ? 'sedikit' : '' }}">
+                                    Tersisa {{ $w->sisa }} kursi
                                 </div>
-                                <a href="/workshops/{{ $w['id'] }}" class="btn btn-orange">Lihat detail</a>
+                                <a href="{{ route('workshops.show', $w->id) }}" class="btn btn-orange">Lihat detail</a>
                             @endif
                         </div>
                     </article>
-                @endforeach
+                @empty
+                    <p>Belum ada workshop yang dibuka.</p>
+                @endforelse
             </div>
         </div>
     </section>

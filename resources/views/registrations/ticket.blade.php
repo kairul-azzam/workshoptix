@@ -1,35 +1,13 @@
 {{--
     File: resources/views/registrations/ticket.blade.php
-    Halaman tiket digital (WT-10). Data masih dummy.
-
-    Route di routes/web.php:
-        Route::get('/pendaftaran/{id}/tiket', function ($id) {
-            return view('registrations.ticket', ['id' => $id]);
-        });
-
-    Untuk menguji kondisi belum lunas, tambahkan ?status=pending di alamat.
-
-    Catatan: di langkah 03 dan 04, pengecekan ini harus dilakukan di backend:
-      - hanya pemilik pendaftaran yang boleh membuka (Policy, 403 jika bukan)
-      - tiket hanya tampil jika status_bayar = lunas
-    Jangan mengandalkan ?status= dari URL.
+    Tiket digital dari database. Variabel: $registrasi (dengan workshop dan user).
+    Akses dijaga RegistrationPolicy. Tiket hanya tampil jika status lunas.
 --}}
 @extends('layouts.app')
 
 @php
-    // Data dummy (nanti diganti Registration::with(['user', 'workshop'])->findOrFail($id))
-    $t = [
-        'kode'     => 'WTX-2026-' . str_pad($id, 4, '0', STR_PAD_LEFT),
-        'peserta'  => 'Nama Peserta',
-        'kelas'    => 'XI RPL',
-        'workshop' => 'Dasar Laravel untuk Pemula',
-        'pemateri' => 'Kak Dimas',
-        'tanggal'  => '22 Nov 2026',
-        'jam'      => '09.00 WIB',
-        'lokasi'   => 'Lab RPL 1',
-    ];
-
-    $lunas = request()->query('status', 'lunas') === 'lunas';
+    // Tiket hanya tampil jika sudah lunas DAN kode tiket sudah dibuat
+    $bisaTampil = $registrasi->isLunas() && $registrasi->kode_tiket;
 @endphp
 
 @section('title', 'Tiket Digital')
@@ -83,9 +61,6 @@
     .terkunci h2 { font-size: 1.4rem; color: var(--navy); }
     .terkunci p { color: var(--muted); margin: .5rem auto 1.4rem; max-width: 46ch; }
 
-    .uji { margin-top: 1.5rem; font-size: .9rem; color: var(--muted); text-align: center; }
-    .uji a { text-decoration: underline; }
-
     @media (max-width: 640px) {
         .tiket { grid-template-columns: 1fr; }
         .tiket-stub { border-left: 0; border-top: 2px dashed var(--line); }
@@ -94,7 +69,7 @@
 
     /* Saat dicetak: hanya tiket yang tampil */
     @media print {
-        .nav, footer, .aksi, .uji, .tiket-page h1, .tiket-page .sub { display: none !important; }
+        .nav, footer, .aksi, .tiket-page h1, .tiket-page .sub { display: none !important; }
         .tiket { box-shadow: none; margin-top: 0; }
     }
 </style>
@@ -107,23 +82,23 @@
             <h1>Tiket digital</h1>
             <p class="sub">Tunjukkan tiket ini kepada panitia saat hari workshop.</p>
 
-            @if ($lunas)
-                <article class="tiket" aria-label="Tiket {{ $t['workshop'] }}">
+            @if ($bisaTampil)
+                <article class="tiket" aria-label="Tiket {{ $registrasi->workshop->judul }}">
                     <div class="tiket-kepala">
                         <span class="logo">Workshop<span>TIX</span></span>
                         <small>Tiket peserta</small>
                     </div>
 
                     <div class="tiket-isi">
-                        <h2>{{ $t['workshop'] }}</h2>
-                        <p class="pemateri">Pemateri: {{ $t['pemateri'] }}</p>
+                        <h2>{{ $registrasi->workshop->judul }}</h2>
+                        <p class="pemateri">Pemateri: {{ $registrasi->workshop->pemateri }}</p>
 
                         <dl class="data">
-                            <div><dt>Nama peserta</dt><dd>{{ $t['peserta'] }}</dd></div>
-                            <div><dt>Kelas</dt><dd>{{ $t['kelas'] }}</dd></div>
-                            <div><dt>Tanggal</dt><dd>{{ $t['tanggal'] }}</dd></div>
-                            <div><dt>Jam</dt><dd>{{ $t['jam'] }}</dd></div>
-                            <div><dt>Tempat</dt><dd>{{ $t['lokasi'] }}</dd></div>
+                            <div><dt>Nama peserta</dt><dd>{{ $registrasi->user->name }}</dd></div>
+                            <div><dt>Kelas</dt><dd>{{ $registrasi->kelas }}</dd></div>
+                            <div><dt>Tanggal</dt><dd>{{ $registrasi->workshop->tanggal_tampil }}</dd></div>
+                            <div><dt>Jam</dt><dd>{{ $registrasi->workshop->jam_tampil }}</dd></div>
+                            <div><dt>Tempat</dt><dd>{{ $registrasi->workshop->lokasi }}</dd></div>
                         </dl>
                     </div>
 
@@ -131,7 +106,7 @@
                         <div class="qr" role="img" aria-label="Kode QR tiket"></div>
                         <div>
                             <div class="kode-label">Kode tiket</div>
-                            <span class="kode">{{ $t['kode'] }}</span>
+                            <span class="kode">{{ $registrasi->kode_tiket }}</span>
                         </div>
                     </div>
 
@@ -140,22 +115,15 @@
 
                 <div class="aksi">
                     <button type="button" class="btn btn-orange" onclick="window.print()">Cetak tiket</button>
-                    <a href="/" class="btn btn-outline">Kembali ke beranda</a>
+                    <a href="{{ route('registrations.index') }}" class="btn btn-outline">Pendaftaran saya</a>
                 </div>
             @else
                 <div class="terkunci">
                     <h2>Tiket belum bisa dibuka</h2>
                     <p>Pembayaranmu belum lunas. Tiket muncul setelah pembayaran terverifikasi.</p>
-                    <a href="/pendaftaran/{{ $id }}/status" class="btn btn-orange">Lihat status pembayaran</a>
+                    <a href="{{ route('registrations.status', $registrasi->id) }}" class="btn btn-orange">Lihat status pembayaran</a>
                 </div>
             @endif
-
-            {{-- Hanya untuk uji tampilan, hapus di langkah 04 --}}
-            <p class="uji">
-                Uji tampilan:
-                <a href="?status=lunas">lunas</a> |
-                <a href="?status=pending">belum lunas</a>
-            </p>
         </div>
     </div>
 </section>
