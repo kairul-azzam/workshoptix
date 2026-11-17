@@ -1,10 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use Illuminate\Support\Facades\Route;
 
+// ---------- Terbuka untuk semua ----------
 Route::view('/', 'beranda');
-// Hanya untuk yang belum login
+
+Route::get('/workshops/{id}', function ($id) {
+    return view('workshops.show', ['id' => $id]);
+});
+
+// ---------- Hanya yang belum login ----------
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
@@ -13,25 +19,24 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-// Hanya untuk yang sudah login
-Route::post('/logout', [AuthController::class, 'logout'])
-    ->middleware('auth')
-    ->name('logout');
+// ---------- Harus login (peserta dan panitia) ----------
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/workshops/{id}', function ($id) {
-    return view('workshops.show', ['id' => $id]);
+    Route::get('/workshops/{id}/daftar', function ($id) {
+        return view('registrations.create', ['id' => $id]);
+    });
+
+    Route::get('/pendaftaran/{id}/status', function ($id) {
+        return view('registrations.status', ['id' => $id]);
+    });
+
+    Route::get('/pendaftaran/{id}/tiket', function ($id) {
+        return view('registrations.ticket', ['id' => $id]);
+    });
 });
 
-Route::get('/workshops/{id}/daftar', function ($id) {
-    return view('registrations.create', ['id' => $id]);
+// ---------- Hanya panitia ----------
+Route::middleware(['auth', 'role:panitia'])->group(function () {
+    Route::view('/panitia', 'panitia.dashboard');
 });
-
-Route::get('/pendaftaran/{id}/status', function ($id) {
-    return view('registrations.status', ['id' => $id]);
-});
-
-Route::get('/pendaftaran/{id}/tiket', function ($id) {
-    return view('registrations.ticket', ['id' => $id]);
-});
-
-Route::view('/panitia', 'panitia.dashboard');
