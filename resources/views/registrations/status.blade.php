@@ -1,7 +1,7 @@
 {{--
     File: resources/views/registrations/status.blade.php
-    Status pembayaran dari database. Variabel: $registrasi (dengan workshop dan user).
-    Akses dijaga RegistrationPolicy di controller.
+    Status pembayaran + tombol bayar Midtrans Snap.
+    Variabel: $registrasi, $snapToken (null jika belum bisa dibuat)
 --}}
 @extends('layouts.app')
 
@@ -77,13 +77,24 @@
 
                 <div class="aksi">
                     @if ($status === 'pending')
-                        {{-- Tombol bayar dihubungkan ke Midtrans Snap di Langkah 04 --}}
-                        <a href="#" class="btn btn-orange">Bayar sekarang</a>
-                        <a href="{{ route('registrations.status', $registrasi->id) }}" class="btn btn-outline">Cek status pembayaran</a>
+                        @if ($snapToken)
+                            <button type="button" id="pay-button" class="btn btn-orange">Bayar sekarang</button>
+                        @else
+                            <button type="button" class="btn" aria-disabled="true">Pembayaran belum tersedia</button>
+                        @endif
+
+                        {{-- Status diverifikasi backend ke Midtrans --}}
+                        <form id="form-cek" method="POST" action="{{ route('payments.check', $registrasi->id) }}" style="display:contents">
+                            @csrf
+                            <button type="submit" class="btn btn-outline">Cek status pembayaran</button>
+                        </form>
                     @elseif ($status === 'lunas')
                         <a href="{{ route('registrations.ticket', $registrasi->id) }}" class="btn btn-orange">Buka tiket</a>
                     @else
-                        <a href="#" class="btn btn-orange">Coba bayar lagi</a>
+                        <form method="POST" action="{{ route('payments.retry', $registrasi->id) }}" style="display:contents">
+                            @csrf
+                            <button type="submit" class="btn btn-orange">Coba bayar lagi</button>
+                        </form>
                         <a href="/#workshop" class="btn btn-outline">Pilih workshop lain</a>
                     @endif
                 </div>
@@ -91,4 +102,20 @@
         </div>
     </div>
 </section>
+
+{{-- Snap.js sandbox. Hapus ".sandbox" dari alamat jika nanti pindah ke production. --}}
+@if ($status === 'pending' && $snapToken)
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
+    <script>
+        document.getElementById('pay-button').addEventListener('click', function () {
+            snap.pay(@json($snapToken), {
+                // Hasil dari browser TIDAK dipercaya. Kita hanya minta backend mengecek ke Midtrans.
+                onSuccess: function () { document.getElementById('form-cek').submit(); },
+                onPending: function () { document.getElementById('form-cek').submit(); },
+                onError:   function () { alert('Pembayaran gagal. Silakan coba lagi.'); },
+                onClose:   function () {}
+            });
+        });
+    </script>
+@endif
 @endsection
