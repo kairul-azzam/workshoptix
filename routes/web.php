@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Panitia\WorkshopController as PanitiaWorkshopController;
 
 // ---------- Terbuka untuk semua ----------
 Route::view('/', 'beranda');
@@ -37,6 +38,16 @@ Route::middleware('auth')->group(function () {
 });
 
 // ---------- Hanya panitia ----------
-Route::middleware(['auth', 'role:panitia'])->group(function () {
-    Route::view('/panitia', 'panitia.dashboard');
-});
+// ---------- Hanya panitia ----------
+Route::middleware(['auth', 'role:panitia'])
+    ->prefix('panitia')
+    ->name('panitia.')
+    ->group(function () {
+        Route::get('/', [PanitiaWorkshopController::class, 'dashboard'])->name('dashboard');
+
+        Route::get('/workshops/create', [PanitiaWorkshopController::class, 'create'])->name('workshops.create');
+        Route::post('/workshops', [PanitiaWorkshopController::class, 'store'])->name('workshops.store');
+        Route::get('/workshops/{workshop}/edit', [PanitiaWorkshopController::class, 'edit'])->name('workshops.edit');
+        Route::put('/workshops/{workshop}', [PanitiaWorkshopController::class, 'update'])->name('workshops.update');
+        Route::delete('/workshops/{workshop}', [PanitiaWorkshopController::class, 'destroy'])->name('workshops.destroy');
+    });
